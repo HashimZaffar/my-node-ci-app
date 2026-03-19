@@ -1,1 +1,1 @@
-console.log('Hello from my Node.js DevOps app');
+console.log('Updated via GitHub Actions CI/CD\!');
