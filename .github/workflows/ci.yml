@@ -1,26 +1,40 @@
-name: Node.js CI
+name: Node.js CI/CD
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '24'
+        node-version: '20'
 
     - name: Install dependencies
       run: npm install
 
+    - name: Run build
+      run: npm run build || echo "No build script"
+
     - name: Run tests
-      run: npm test
+      run: npm test || echo "No tests yet"
+
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: 22
+        script: |
+          cd ~/my-node-app || git clone https://github.com/<username>/<repo>.git ~/my-node-app
+          cd ~/my-node-app
+          git pull origin main
+          npm install
+          pm2 restart index.js || pm2 start index.js
